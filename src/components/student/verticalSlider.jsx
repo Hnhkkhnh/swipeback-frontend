@@ -1,4 +1,4 @@
-import "../styles/fb_page_slider.css";
+import "../../styles/fb_page_slider.css";
 import "bootstrap-icons/font/bootstrap-icons.min.css";
 //import { Alarm, Book, Lightbulb, ThreeDots } from "react-bootstrap-icons";
 import { useId } from "react";
@@ -12,9 +12,12 @@ function VerticalSlider(props) {
         ]
     let bar = useId();
     let infobox = useId();
-    let onClickInformation = ()=>{
+    let onClickInformation = (evt)=>{
+        
+        console.log(evt);
         let element = document.getElementById(infobox);
         if(!element.classList.contains("infobox-visible")){
+            evt.stopPropagation();
             if(document.querySelector(".infobox-visible")!=null){
                 document.querySelector(".infobox-visible").classList.remove("infobox-visible");
             }

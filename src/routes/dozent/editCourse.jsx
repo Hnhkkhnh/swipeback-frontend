@@ -1,14 +1,45 @@
-import DayTimeSelector from "../components/daytimeselector";
-import { useState } from "react";
-import SettingFeedbackSlider from "../components/settingFeedbackslider";
-import SettingSwipeQuestion from "../components/settingSwipeQuestion";
+import DayTimeSelector from "../../components/dozent/daytimeselector";
+import { useContext, useEffect, useState } from "react";
+import SettingFeedbackSlider from "../../components/dozent/settingFeedbackslider";
+import SettingSwipeQuestion from "../../components/dozent/settingSwipeQuestion";
 import QRCode from "react-qr-code";
+import { useNavigate, useParams } from "react-router-dom";
+import { AuthenticationContext } from "../../context/authenticationContext";
+import { RequestCreateModule, RequestDeleteModule, RequestModule, RequestUpdateModule } from "../../requests/requestModules";
+import { RequestEndSession, RequestSesseionAddSwipeQuestion, RequestStartSession } from "../../requests/requestSession";
+import "../../styles/editpage_minus_plus_circle.css";
 
 function NewCourse() {
+    let {fbnr} = useParams();
+    let { user } = useContext(AuthenticationContext);
     let [daySelected, setDaySelected] = useState([]);
     let [feedbackslider, setFeedbackslider] = useState([]);
     let [swipequestion, setSwipequestion] = useState([]);
-    console.log(feedbackslider);
+    let [data , setData] = useState({});
+    let [session, setSession] = useState({});
+
+    const navigate = useNavigate();
+
+    
+    useEffect(()=>{
+        let onDataLoad=(result)=>{
+            setData({...result})
+        }
+        RequestModule(user,fbnr,onDataLoad)
+        let onLoadSession = (res)=>{
+            setSession(res);
+        }
+        RequestStartSession(fbnr ,user ,onLoadSession)
+    }, [])
+
+    let onChaingTitle = (evt)=>{
+        let newData = {...data};
+        newData.title=evt.currentTarget.value;
+        setData(newData);
+    }
+    
+
+
     let frequence = [
         {
             value: "onetime",
@@ -24,7 +55,7 @@ function NewCourse() {
         },
         {
             value: "bwklyeven",
-            label: "Biweekly (even Weeks)"
+            label: "Biweekly (even weeks)"
         },
         {
             value: "monthly",
@@ -50,7 +81,7 @@ function NewCourse() {
         },
         {
             name: "Thirsday",
-            nameshort: "THR",
+            nameshort: "THU",
             id: "wdthr",
         },
         {
@@ -121,7 +152,10 @@ function NewCourse() {
     let onPlusClickedSwipe = () => {
         setSwipequestion([
             ...swipequestion,
-            swipequestion.length
+            {
+                alreadySaved:false,
+                id: swipequestion.length
+            }
         ])
     }
 
@@ -136,9 +170,49 @@ function NewCourse() {
         setSwipequestion(array)
     }
 
-    let onSubmitNewCours = (evt) => {
+    let onUpdateCours = (evt) => {
         evt.preventDefault();
+        if (document.getElementById("cname").value != ""||document.getElementById("cname").value==data.title) {
+            let onHandleData = (result) => {
+                console.log(result)
+                setData({...result});
+            }
+            RequestUpdateModule(document.getElementById("cname").value,fbnr, user, onHandleData)
+        }
+        if(session.id!=null){
+            for(let i = 0; i<swipequestion.length;i++){
+                if(!swipequestion[i].alreadySaved){
+                    let onSwipquestionaddet=()=>{
+                        let data = [ ...swipequestion]
+                        data[i].alreadySaved= true;
+
+                    }
+                    console.log(document.getElementById(i+"questionname").value)
+                    RequestSesseionAddSwipeQuestion(session.id,user, document.getElementById(i+"questionname").value,onSwipquestionaddet)
+                }
+            }
+        }
         // hier muss definiert werrden wie die daten ans backend gegeben werden sollen (maybe weiterleitung zu der dazugehörenden edit page)
+    }
+    let onClickDeleteCourse = ()=>{
+        let success = ()=>{
+            document.querySelector("body>div.modal-backdrop").remove();
+            navigate("/doz");
+        }
+        let successsessionend = ()=>{
+            RequestDeleteModule(fbnr,user,success)
+        }
+        
+        RequestEndSession(session.id,user,successsessionend);
+        
+    }
+
+    let onClickMainmenu = () => {
+        document.querySelector("body>div.modal-backdrop").remove();
+        
+        RequestEndSession(session.id,user);
+        navigate("/doz")
+
     }
 
     return (
@@ -152,8 +226,9 @@ function NewCourse() {
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <QRCode value="hier könnte ihre link stehen" />
-                            <p>hier könnte ihre link stehen</p>
+                            <QRCode value={"https://swipeback.pages.dev/fb/"+session.join_code} />
+                            <p>{"https://swipeback.pages.dev/fb/"+session.join_code}</p>
+                            <p>Join Code: {session.join_code}</p>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -161,17 +236,36 @@ function NewCourse() {
                     </div>
                 </div>
             </div>
-            <div class="modal fade" id="linkmodal" tabindex="-1" aria-labelledby="linkmodalLabel" aria-hidden="true">
+            <div class="modal fade" id="deletemodal" tabindex="-1" aria-labelledby="deletemodalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="linkmodalLabel">Link</h5>
+                            <h5 class="modal-title" id="deletemodalLabel">Link</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <p>hier könnte ihre link stehen</p>
+                            <p>Are You sure you want to delete this course</p>
                         </div>
                         <div class="modal-footer">
+                            
+                            <button type="button" class="btn btn-danger" onClick={onClickDeleteCourse}>Delete Course</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="backmainmanu" tabindex="-1" aria-labelledby="backmainmanuLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="backmainmanuLabel">Link</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>All unsaved chainges will be removed. If you want to proceed click "Back to main manu".</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-danger" onClick={onClickMainmenu}>Back to main manu</button>
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         </div>
                     </div>
@@ -181,23 +275,28 @@ function NewCourse() {
 
                 <div className="card-body">
 
-                    <form action="/hiermus die anfrageseite stehen" onSubmit={onSubmitNewCours} method="post">
+                    <form action="/hiermus die anfrageseite stehen" onSubmit={onUpdateCours} method="post">
 
                         <div className="container">
                             <div className="row">
                                 <div className="col-4"><h3>Add New Course</h3></div>
                                 <div className="col-2">
-                                    <button className="btn btn-secondary" type="submit">Save</button>
-                                </div>
-                                <div className="col-2">
-                                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#qrmodal">
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#qrmodal">
                                         Generate QR-code
                                     </button>
-
                                 </div>
-                                <div className="col-2"><button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#linkmodal">
-                                        Generate link
-                                    </button>
+                                <div className="col-2">
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deletemodal">
+                                    Delete
+                                </button>
+<div className="col-2"><button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#backmainmanu">
+                                    Cancel
+                                </button>
+                                </div>
+                                <div className="col-2">
+                                </div>
+                                <button className="btn btn-primary" type="submit">Save</button>
+                                
                                 </div>
                             </div>
                             <div className="row">
@@ -205,7 +304,7 @@ function NewCourse() {
                                     <h4 >Course name</h4>
                                 </div>
                                 <div className="col-9">
-                                    <input type="text" id="cname" name="cname" className="form-control" placeholder="Enter Cours Name" />
+                                    <input type="text" id="cname" name="cname" className="form-control" placeholder="Enter Cours Name" onChange={onChaingTitle} value={data.title} />
                                 </div>
                             </div>
                             <div className="row">
@@ -247,7 +346,7 @@ function NewCourse() {
                                                     <div className="input-group d-flex w-100 justify-content-center">
                                                         {weekdays.map(day => {
                                                             return (<><input type="checkbox" className="btn-check" id={day.id} name={day.id} value={day.name} onChange={onDaySelected} />
-                                                                <label htmlFor={day.id} className="btn btn-outline-primary border-radius-right">{day.nameshort}</label></>)
+                                                                <label htmlFor={day.id} className="btn btn-outline-primary rounded-0">{day.nameshort}</label></>)
                                                         }
                                                         )}
 
@@ -272,7 +371,7 @@ function NewCourse() {
                                                     frequence.map(freq => {
                                                         return (<>
                                                             <input type="radio" className="btn-check" id={freq.value} name="freq" value={freq.value} />
-                                                            <label htmlFor={freq.value} className="btn btn-outline-primary">{freq.label}</label>
+                                                            <label htmlFor={freq.value} className="btn btn-outline-primary rounded-0">{freq.label}</label>
                                                         </>);
                                                     }
 
@@ -297,7 +396,7 @@ function NewCourse() {
                                                 <div className="row">
                                                     <div className="col-12 p-4 justify-content-cneter">
                                                         <div>
-                                                            <button type="button" class="btn btn-outline-secondary rounded-circle fs-2" onClick={onPlusClickedSlider}>+</button>
+                                                            <button type="button" class="btn btn-outline-primary circle rounded-circle fs-2" onClick={onPlusClickedSlider}>+</button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -316,13 +415,13 @@ function NewCourse() {
                                         <div className="card-body">
                                             <div className="container">
                                                 {swipequestion.map(i => {
-                                                    return <SettingSwipeQuestion id={i} onclick={onMinusclickedSwipe}></SettingSwipeQuestion>
+                                                    return <SettingSwipeQuestion id={i.id} onclick={onMinusclickedSwipe}></SettingSwipeQuestion>
                                                 }
                                                 )}
                                                 <div className="row">
                                                     <div className="col-12 p-4 justify-content-cneter">
                                                         <div>
-                                                            <button type="button" class="btn btn-outline-secondary rounded-circle fs-2" onClick={onPlusClickedSwipe} >+</button>
+                                                            <button type="button" class="btn btn-outline-primary circle rounded-circle fs-2" onClick={onPlusClickedSwipe} >+</button>
                                                         </div>
                                                     </div>
                                                 </div>

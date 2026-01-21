@@ -1,17 +1,23 @@
-import DayTimeSelector from "../components/daytimeselector";
-import { useState } from "react";
-import SettingFeedbackSlider from "../components/settingFeedbackslider";
-import SettingSwipeQuestion from "../components/settingSwipeQuestion";
+import DayTimeSelector from "../../components/dozent/daytimeselector";
+import { useContext, useState } from "react";
+import SettingFeedbackSlider from "../../components/dozent/settingFeedbackslider";
+import SettingSwipeQuestion from "../../components/dozent/settingSwipeQuestion";
 import QRCode from "react-qr-code";
+import { useNavigate } from "react-router-dom";
+import { AuthenticationContext } from "../../context/authenticationContext";
+import { RequestCreateModule } from "../../requests/requestModules";
 
-function EditCourse() {
-
-    let data;//hier müssten die daten vom backend abgefragt werden
-
+function NewCourse() {
+    let { user } = useContext(AuthenticationContext);
     let [daySelected, setDaySelected] = useState([]);
     let [feedbackslider, setFeedbackslider] = useState([]);
     let [swipequestion, setSwipequestion] = useState([]);
     console.log(feedbackslider);
+    const navigate = useNavigate();
+    console.log(user)
+
+
+
     let frequence = [
         {
             value: "onetime",
@@ -27,7 +33,7 @@ function EditCourse() {
         },
         {
             value: "bwklyeven",
-            label: "Biweekly (even Weeks)"
+            label: "Biweekly (even weeks)"
         },
         {
             value: "monthly",
@@ -53,7 +59,7 @@ function EditCourse() {
         },
         {
             name: "Thirsday",
-            nameshort: "THR",
+            nameshort: "THU",
             id: "wdthr",
         },
         {
@@ -141,7 +147,19 @@ function EditCourse() {
 
     let onSubmitNewCours = (evt) => {
         evt.preventDefault();
+        if (document.getElementById("cname").value != "") {
+            let onHandleData = (result) => {
+                navigate("/doz/edit/" + result.id);
+            }
+            RequestCreateModule(document.getElementById("cname").value, document.getElementById("cname").value, user, onHandleData)
+        }
         // hier muss definiert werrden wie die daten ans backend gegeben werden sollen (maybe weiterleitung zu der dazugehörenden edit page)
+    }
+
+    let onClickMainmenu = () => {
+        document.querySelector("body>div.modal-backdrop").remove();
+        navigate("/doz")
+
     }
 
     return (
@@ -180,6 +198,23 @@ function EditCourse() {
                     </div>
                 </div>
             </div>
+            <div class="modal fade" id="backmainmanu" tabindex="-1" aria-labelledby="backmainmanuLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="backmainmanuLabel">Link</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>All unsaved chainges will be removed. If you want to proceed click "Back to main manu".</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onClick={onClickMainmenu}>Back to main manu</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div className="card">
 
                 <div className="card-body">
@@ -190,22 +225,25 @@ function EditCourse() {
                             <div className="row">
                                 <div className="col-4"><h3>Add New Course</h3></div>
                                 <div className="col-2">
-                                    <button className="btn btn-secondary" type="submit">Save</button>
-                                </div>
-                                <div className="col-2">
-                                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#qrmodal">
-                                        Generate QR-code
-                                    </button>
 
                                 </div>
-                                <div className="col-2"><button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#linkmodal">
-                                        Generate link
+                                <div className="col-2">
+
+
+                                </div>
+                                <div className="col-2">
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#backmainmanu">
+                                        Cancel
                                     </button>
+                                </div>
+                                <div className="col-2">
+                                    <button className="btn btn-primary" type="submit">Save</button>
+
                                 </div>
                             </div>
                             <div className="row">
                                 <div className="col-3">
-                                    <h4 >Cours Name</h4>
+                                    <h4 >Course name</h4>
                                 </div>
                                 <div className="col-9">
                                     <input type="text" id="cname" name="cname" className="form-control" placeholder="Enter Cours Name" />
@@ -250,7 +288,7 @@ function EditCourse() {
                                                     <div className="input-group d-flex w-100 justify-content-center">
                                                         {weekdays.map(day => {
                                                             return (<><input type="checkbox" className="btn-check" id={day.id} name={day.id} value={day.name} onChange={onDaySelected} />
-                                                                <label htmlFor={day.id} className="btn btn-outline-primary border-radius-right">{day.nameshort}</label></>)
+                                                                <label htmlFor={day.id} className="btn btn-outline-primary rounded-0">{day.nameshort}</label></>)
                                                         }
                                                         )}
 
@@ -275,7 +313,7 @@ function EditCourse() {
                                                     frequence.map(freq => {
                                                         return (<>
                                                             <input type="radio" className="btn-check" id={freq.value} name="freq" value={freq.value} />
-                                                            <label htmlFor={freq.value} className="btn btn-outline-primary">{freq.label}</label>
+                                                            <label htmlFor={freq.value} className="btn btn-outline-primary rounded-0">{freq.label}</label>
                                                         </>);
                                                     }
 
@@ -300,7 +338,7 @@ function EditCourse() {
                                                 <div className="row">
                                                     <div className="col-12 p-4 justify-content-cneter">
                                                         <div>
-                                                            <button type="button" class="btn btn-outline-secondary rounded-circle fs-2" onClick={onPlusClickedSlider}>+</button>
+                                                            <button type="button" class="btn btn-outline-primary circle rounded-circle fs-2" onClick={onPlusClickedSlider}>+</button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -313,7 +351,7 @@ function EditCourse() {
 
                             </div>
                             <div className="row">
-                                <div className="col-3"><h4>after lecutre swipe questions</h4></div>
+                                <div className="col-3"><h4>After lecutre swipe questions</h4></div>
                                 <div className="col-9">
                                     <div className="card p-0">
                                         <div className="card-body">
@@ -325,7 +363,7 @@ function EditCourse() {
                                                 <div className="row">
                                                     <div className="col-12 p-4 justify-content-cneter">
                                                         <div>
-                                                            <button type="button" class="btn btn-outline-secondary rounded-circle fs-2" onClick={onPlusClickedSwipe} >+</button>
+                                                            <button type="button" class="btn btn-outline-primary circle rounded-circle fs-2" onClick={onPlusClickedSwipe} >+</button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -345,4 +383,4 @@ function EditCourse() {
 
 }
 
-export default EditCourse
+export default NewCourse

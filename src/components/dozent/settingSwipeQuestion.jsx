@@ -12,13 +12,13 @@ function SettingSwipeQuestion(props) {
                                 <div className="col-3">
                                     <label htmlFor={props.id+"questionname"} className="col-form-label">Question Title</label>
                                 </div>
-                                <div className="col-6">
+                                <div className="col-5">
                                     <input type="text" className="form-control" id={props.id+"questionname"} name={props.id+"questionname"}/>
                                 </div>
                                 <div className="col-1">
                                     <label htmlFor={props.id+"qsymbol"} className="col-form-label">Logo</label>
                                 </div>
-                                <div className="col-2" >
+                                <div className="col-3" >
                                     <Iconselector id={props.id+"qsymbol"}></Iconselector>
                                     
                                 </div>
@@ -28,7 +28,7 @@ function SettingSwipeQuestion(props) {
 
                 </div>
                 <div className="col-3">
-                    <button type="button" class="btn btn-outline-secondary rounded-circle fs-2" onClick={props.onclick}> - </button>
+                    <button type="button" class="btn btn-outline-danger circle rounded-circle fs-2" onClick={props.onclick}> - </button>
                 </div>
 
             </div>

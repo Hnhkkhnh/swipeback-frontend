@@ -1,14 +1,17 @@
 
 import { useState } from "react";
-import VerticalSlider from "../components/verticalSlider"
-import JsonData from "../../testfiles/test-feedback.json"
-import Headline from '../components/headline';
-import Questiontext from '../components/questiontext';
-import "../styles/fb-page.css";
+import VerticalSlider from "../../components/student/verticalSlider"
+import JsonData from "../../../testfiles/test-feedback.json"
+import Headline from '../../components/headline';
+import Questiontext from '../../components/student/questiontext';
+import "../../styles/fb-page.css";
+import { useNavigate, useParams } from "react-router-dom";
+import { RequestCreateTextFeedback } from "../../requests/requestTextFeedback";
 
 
 function Feedback() {
-
+    let  { fbnr } = useParams();
+    let navigat = useNavigate();
     let scheight = screen.height*0.60;
     scheight= scheight+"px";
     const [questions, setQuestions] = useState([]);
@@ -20,7 +23,7 @@ function Feedback() {
     }
     window.addEventListener("keydown", (evt)=>{
       if(evt.key=="AltGraph"){
-        window.location.href= window.location.href + "/swipe";
+        navigat("/fb/"+fbnr+"/swipe")
       }
     })
 
@@ -28,6 +31,10 @@ function Feedback() {
       if(document.getElementById("question").value!=""){
         let txt = document.getElementById("question").value;
         document.getElementById("question").value="";
+        let onLoadedTextFeedbackCreated = (result)=>{
+          console.log(result);
+        }
+        RequestCreateTextFeedback(txt, fbnr,onLoadedTextFeedbackCreated)
         let time = Date.now();
         setQuestions([
           ...questions,
@@ -58,7 +65,7 @@ function Feedback() {
                 </div>
                 <div class="input-group mt-1">
                   <input onKeyDown={onKeyPressQuestion} id='question' type="text" className="form-control" placeholder="Question" aria-label="Question" aria-describedby="button-addon2"/>
-                  <button className="btn btn-outline-secondary" onClick={askQuestion} type="button" id="button-addon2">Button</button>
+                  <button className="btn btn-outline-primary" onClick={askQuestion} type="button" id="button-addon2">Send</button>
                 </div>
               
               </div>

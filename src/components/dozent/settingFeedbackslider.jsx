@@ -1,3 +1,4 @@
+import ColorPicker from "./colorpicker";
 import Iconselector from "./iconselector";
 
 
@@ -25,7 +26,8 @@ function SettingFeedbackSlider(props) {
                                 <label htmlFor={props.id+"color"} className="col-form-label">Color</label>
                             </div>
                             <div className="col-2">
-                                <input type="color" className="form-control form-control-color" id={props.id+"color"} name={props.id+"color"}/>
+                                <ColorPicker id={props.id+"color"}></ColorPicker>
+                                
                             </div>
                         </div>
                     </div>
@@ -33,7 +35,7 @@ function SettingFeedbackSlider(props) {
             </div>
 
             <div className="col-3">
-                <button type="button" class="btn btn-outline-secondary rounded-circle fs-2" onClick={props.onclick}> - </button>
+                <button type="button" class="btn btn-outline-danger circle rounded-circle fs-2" onClick={props.onclick}> - </button>
             </div>
         </div>
     </>
